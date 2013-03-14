@@ -1,14 +1,28 @@
 class SessPoolScanner
+macro
+  BLANK       \s+
+  CONSTANT    [A-Z_]+
+  FLOAT       \d+\.\d*
+  KEYWORD     if|else|true|false|nil
+  IDENTIFIER  [a-z_][a-zA-Z_]+
+  INDENT      \n\s+
+  INTEGER     \d+
+  OPERATOR    \|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\/
+  STRING      "\b[\\"]*.*?\b"
+  SYMBOL      \:[A-Z_]+
+  VALUE       .+
 rule
-  \s+                  # no action
-  \bif\b               { [:IF, text] }
-  >                    { [:GREATER_THAN, text] }
-  \d+                  { [:INTEGER, text.to_i] }
-  [a-z_][a-zA-Z_]+     { [:IDENTIFIER, text] }
-  [A-Z_]+              { [:CONSTANT, text] }
-  \:[a-zA-Z]+          { [:SYMBOL, text] }
-  "\b[\\"]*.*?\b"      { [:STRING, text] }
-  '\b[\\"]*.*?\b'      { [:STRING_LITERAL, text] }
+  {KEYWORD}     { [text.upcase.to_sym, text] }
+  {IDENTIFIER}  { [:IDENTIFIER, text] }
+  {CONSTANT}    { [:CONSTANT, text] }
+  {SYMBOL}      { [:SYMBOL, text] }
+  {FLOAT}       { [:FLOAT, text.to_f] }
+  {INTEGER}     { [:INTEGER, text.to_i] }
+  {STRING}      { [:STRING, text] }
+  {OPERATOR}    { [:OPERATOR, text] }
+  {INDENT}      { [:INDENT, text.size - 1] }
+  {BLANK}       # NO ACTION
+  {VALUE}       { [:VALUE, text] }
 inner
   def tokenize(code)
     scan_setup(code)

@@ -57,17 +57,8 @@ class SessPoolScanner < Racc::Parser
     token = case @state
     when nil
       case
-      when (text = @ss.scan(/\s+/))
-        ;
-
-      when (text = @ss.scan(/\bif\b/))
-         action { [:IF, text] }
-
-      when (text = @ss.scan(/>/))
-         action { [:GREATER_THAN, text] }
-
-      when (text = @ss.scan(/\d+/))
-         action { [:INTEGER, text.to_i] }
+      when (text = @ss.scan(/if|else|true|false|nil/))
+         action { [text.upcase.to_sym, text] }
 
       when (text = @ss.scan(/[a-z_][a-zA-Z_]+/))
          action { [:IDENTIFIER, text] }
@@ -75,14 +66,29 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/[A-Z_]+/))
          action { [:CONSTANT, text] }
 
-      when (text = @ss.scan(/\:[a-zA-Z]+/))
+      when (text = @ss.scan(/\:[A-Z_]+/))
          action { [:SYMBOL, text] }
+
+      when (text = @ss.scan(/\d+\.\d*/))
+         action { [:FLOAT, text.to_f] }
+
+      when (text = @ss.scan(/\d+/))
+         action { [:INTEGER, text.to_i] }
 
       when (text = @ss.scan(/"\b[\\"]*.*?\b"/))
          action { [:STRING, text] }
 
-      when (text = @ss.scan(/'\b[\\"]*.*?\b'/))
-         action { [:STRING_LITERAL, text] }
+      when (text = @ss.scan(/\|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\//))
+         action { [:OPERATOR, text] }
+
+      when (text = @ss.scan(/\n\s+/))
+         action { [:INDENT, text.size - 1] }
+
+      when (text = @ss.scan(/\s+/))
+        ;
+
+      when (text = @ss.scan(/.+/))
+         action { [:VALUE, text] }
 
       else
         text = @ss.string[@ss.pos .. -1]
