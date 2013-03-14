@@ -57,7 +57,7 @@ class SessPoolScanner < Racc::Parser
     token = case @state
     when nil
       case
-      when (text = @ss.scan(/if|else|true|false|nil/))
+      when (text = @ss.scan(/if|else|true|false|nil|function|while|return/))
          action { [text.upcase.to_sym, text] }
 
       when (text = @ss.scan(/[a-z_][a-zA-Z_]+/))
@@ -81,8 +81,11 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/\|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\//))
          action { [:OPERATOR, text] }
 
-      when (text = @ss.scan(/\n\s+/))
+      when (text = @ss.scan(/\n +/))
          action { [:INDENT, text.size - 1] }
+
+      when (text = @ss.scan(/\n\n/))
+        ;
 
       when (text = @ss.scan(/\s+/))
         ;

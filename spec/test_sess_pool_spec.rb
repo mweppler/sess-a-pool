@@ -117,35 +117,44 @@ CODE
       result[2][1].should == 20
    end
 
-#     it 'tests for an identifier and a newline' do
-#       code = <<CODE
-# print
-# 
-# CODE
-#       result = @scanner.tokenize(code)
-#       result[0][0].should == :IDENTIFIER
-#       result[0][1].should == "print"
-#       result[1][0].should == :INDENT
-#       result[1][1].should == ""
-#     end
+    it 'tests for an identifier and a newline' do
+      code = <<CODE
+print
 
-#     it 'tests for a simple function block' do
-#       code = <<CODE
-# function my_function:
-#   print "true"
-# CODE
-#       result = @scanner.tokenize(code)
-#       result[0][0].should == :FUNCTION
-#       result[0][1].should == "function"
-#       result[1][0].should == :IDENTIFIER
-#       result[1][1].should == "my_function"
-#       result[2][0].should == :INDENT
-#       result[2][1].should == 2
-#       result[3][0].should == :IDENTIFIER
-#       result[3][1].should == "print"
-#       result[4][0].should == :STRING
-#       result[4][1].should == "\"true\""
-#     end
+CODE
+      result = @scanner.tokenize(code)
+      result[0][0].should == :IDENTIFIER
+      result[0][1].should == "print"
+      # result[1][0].should == :INDENT
+      # result[1][1].should == 0
+    end
+
+    it 'tests for a simple function block' do
+      code = <<CODE
+function my_function:
+  if true
+    print "true"
+CODE
+      result = @scanner.tokenize(code)
+      result[0][0].should == :FUNCTION
+      result[0][1].should == "function"
+      result[1][0].should == :IDENTIFIER
+      result[1][1].should == "my_function"
+      result[2][0].should == :VALUE
+      result[2][1].should == ":"
+      result[3][0].should == :INDENT
+      result[3][1].should == 2
+      result[4][0].should == :IF
+      result[4][1].should == "if"
+      result[5][0].should == :TRUE
+      result[5][1].should == "true"
+      result[6][0].should == :INDENT
+      result[6][1].should == 4
+      result[7][0].should == :IDENTIFIER
+      result[7][1].should == "print"
+      result[8][0].should == :STRING
+      result[8][1].should == "\"true\""
+    end
 
   end
 end
