@@ -2,10 +2,10 @@ class SessPoolScanner
 macro
   BLANK       \s+
   CONSTANT    [A-Z_]+
-  FLOAT       \d+\.\d*
-  KEYWORD     if|else|true|false|nil|function|while|return
+  FLOAT       [\+|-]?\d+\.\d*
+  KEYWORD     if|else|elsif|true|false|nil|def|end|function|while|return
   IDENTIFIER  [a-z_][a-zA-Z_]+
-  INTEGER     \d+
+  INTEGER     [\+|-]?\d+
   NEWLINE     \n
   OPERATOR    \|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\/
   STRING      "\b[\\"]*.*?\b"

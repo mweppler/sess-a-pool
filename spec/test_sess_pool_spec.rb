@@ -45,10 +45,22 @@ class TestSessPool
       result[0][1].should == 30.0
     end
 
+    it 'tests for a negative float' do
+      result = @scanner.tokenize("-25.0")
+      result[0][0].should == :FLOAT
+      result[0][1].should == -25.0
+    end
+
     it 'tests for an integer' do
       result = @scanner.tokenize("3000")
       result[0][0].should == :INTEGER
       result[0][1].should == 3000
+    end
+
+    it 'tests for a negative integer' do
+      result = @scanner.tokenize("-5")
+      result[0][0].should == :INTEGER
+      result[0][1].should == -5
     end
 
     it 'tests for a symbol' do
