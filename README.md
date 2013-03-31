@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mweppler/sess-a-pool.png)](https://travis-ci.org/mweppler/sess-a-pool)
+
 # Sess[a]Pool Lang
 
 [https://github.com/mweppler/sess-a-pool]
