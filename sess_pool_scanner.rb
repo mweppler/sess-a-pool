@@ -57,6 +57,9 @@ class SessPoolScanner < Racc::Parser
     token = case @state
     when nil
       case
+      when (text = @ss.scan(/\/\*/))
+         action { @state = :COMM ; [:COMMENT_BEGIN, text] }
+
       when (text = @ss.scan(/if|else|elsif|true|false|nil|def|end|function|while|return/))
          action { [text.upcase.to_sym, text] }
 
@@ -82,7 +85,19 @@ class SessPoolScanner < Racc::Parser
          action { [:OPERATOR, text] }
 
       when (text = @ss.scan(/\n +/))
-         action { [:INDENT, text.size - 1] }
+         action {
+                                          @current_indent ||= 0
+                                          indent_size = text.size - 1
+                                          if indent_size > @current_indent
+                                            [:INDENT, indent_size]
+                                          else
+                                            [:OUTDENT, indent_size]
+                                          end
+                                        }
+
+
+      when (text = @ss.scan(/\n(?=\S+)/))
+         action { [:OUTDENT, 0] if @current_indent >= 0 }
 
       when (text = @ss.scan(/\n\n/))
         ;
@@ -92,6 +107,19 @@ class SessPoolScanner < Racc::Parser
 
       when (text = @ss.scan(/.+/))
          action { [:VALUE, text] }
+
+      else
+        text = @ss.string[@ss.pos .. -1]
+        raise  ScanError, "can not match: '" + text + "'"
+      end  # if
+
+    when :COMM
+      case
+      when (text = @ss.scan(/\*\//))
+         action { @state = nil ; [:COMMENT_END, text] }
+
+      when (text = @ss.scan(/(.+)(?=\*\/)/))
+         action { [:COMMENT, text] }
 
       else
         text = @ss.string[@ss.pos .. -1]

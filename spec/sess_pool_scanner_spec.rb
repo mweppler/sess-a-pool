@@ -3,6 +3,19 @@ require './sess_pool_scanner'
 describe SessPoolScanner do
   let(:scanner) { SessPoolScanner.new }
 
+  it 'tokenizes the beginning, text and end of a comment' do
+    code = <<CODE
+/* This is a comment */
+CODE
+    result = scanner.tokenize code
+    result[0][0].should == :COMMENT_BEGIN
+    result[0][1].should == "/*"
+    result[1][0].should == :COMMENT
+    result[1][1].should == " This is a comment "
+    result[2][0].should == :COMMENT_END
+    result[2][1].should == "*/"
+  end
+
   it 'tokenizes the following keywords (if, else, true, false, nil)' do
     result = scanner.tokenize("if else true false nil")
     result[0][0].should == :IF
@@ -103,16 +116,18 @@ CODE
     result[6][1].should == "print"
     result[7][0].should == :STRING
     result[7][1].should == "\"true\""
-    result[8][0].should == :ELSE
-    result[8][1].should == "else"
-    result[9][0].should == :VALUE
-    result[9][1].should == ":"
-    result[10][0].should == :INDENT
-    result[10][1].should == 2
-    result[11][0].should == :IDENTIFIER
-    result[11][1].should == "print"
-    result[12][0].should == :STRING
-    result[12][1].should == "\"false\""
+    result[8][0].should == :OUTDENT
+    result[8][1].should == 0
+    result[9][0].should == :ELSE
+    result[9][1].should == "else"
+    result[10][0].should == :VALUE
+    result[10][1].should == ":"
+    result[11][0].should == :INDENT
+    result[11][1].should == 2
+    result[12][0].should == :IDENTIFIER
+    result[12][1].should == "print"
+    result[13][0].should == :STRING
+    result[13][1].should == "\"false\""
   end
 
   it 'tokenizes a calculation' do
@@ -125,7 +140,7 @@ CODE
     result[2][1].should == 20
  end
 
-  it 'tokenizes an identifier and a newline' do
+  it 'tokenizes an identifier and ignores the newline' do
     code = <<CODE
 print
 
@@ -133,8 +148,6 @@ CODE
     result = scanner.tokenize(code)
     result[0][0].should == :IDENTIFIER
     result[0][1].should == "print"
-    # result[1][0].should == :INDENT
-    # result[1][1].should == 0
   end
 
   it 'tokenizes a simple function block' do
