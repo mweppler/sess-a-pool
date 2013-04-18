@@ -4,73 +4,54 @@ describe SessPoolScanner do
   let(:scanner) { SessPoolScanner.new }
 
   it 'tokenizes the beginning, text and end of a comment' do
-    code = <<CODE
-/* This is a comment */
-CODE
-    result = scanner.tokenize code
-    expect(result[0]).to eq([:COMMENT_BEGIN, "/*"])
-    expect(result[1]).to eq([:COMMENT, " This is a comment "])
-    expect(result[2]).to eq([:COMMENT_END, "*/"])
+    tokens = [[:COMMENT_BEGIN, "/*"], [:COMMENT, " This is a comment "], [:COMMENT_END, "*/"]]
+    expect(scanner.tokenize("/* This is a comment */")).to eq(tokens)
   end
 
   it 'tokenizes the following keywords (if, else, true, false, nil)' do
-    result = scanner.tokenize("if else true false nil")
-    expect(result[0]).to eq([:IF, "if"])
-    expect(result[1]).to eq([:ELSE, "else"])
-    expect(result[2]).to eq([:TRUE, "true"])
-    expect(result[3]).to eq([:FALSE, "false"])
-    expect(result[4]).to eq([:NIL, "nil"])
+    tokens = [[:IF, "if"], [:ELSE, "else"], [:TRUE, "true"], [:FALSE, "false"], [:NIL, "nil"]]
+    expect(scanner.tokenize("if else true false nil")).to eq(tokens)
   end
 
   it 'tokenizes an identifier' do
-    result = scanner.tokenize("print")
-    expect(result[0]).to eq([:IDENTIFIER, "print"])
+    expect(scanner.tokenize("print")).to eq([[:IDENTIFIER, "print"]])
   end
 
   it 'tokenizes an identifier even if a keyword (if) is within the text of the identifier' do
-    result = scanner.tokenize("identifier")
-    expect(result[0]).to eq([:IDENTIFIER, "identifier"])
+    expect(scanner.tokenize("identifier")).to eq([[:IDENTIFIER, "identifier"]])
   end
 
   it 'tokenizes a constant' do
-    result = scanner.tokenize("MY_CONSTANT")
-    expect(result[0]).to eq([:CONSTANT, "MY_CONSTANT"])
+    expect(scanner.tokenize("MY_CONSTANT")).to eq([[:CONSTANT, "MY_CONSTANT"]])
   end
 
   it 'tokenizes a float' do
-    result = scanner.tokenize("30.00")
-    expect(result[0]).to eq([:FLOAT, 30.0])
+    expect(scanner.tokenize("30.00")).to eq([[:FLOAT, 30.0]])
   end
 
   it 'tokenizes a negative float' do
-    result = scanner.tokenize("-25.0")
-    expect(result[0]).to eq([:FLOAT, -25.0])
+    expect(scanner.tokenize("-25.0")).to eq([[:FLOAT, -25.0]])
   end
 
   it 'tokenizes an integer' do
-    result = scanner.tokenize("3000")
-    expect(result[0]).to eq([:INTEGER, 3000])
+    expect(scanner.tokenize("3000")).to eq([[:INTEGER, 3000]])
   end
 
   it 'tokenizes a negative integer' do
-    result = scanner.tokenize("-5")
-    expect(result[0]).to eq([:INTEGER, -5])
+    expect(scanner.tokenize("-5")).to eq([[:INTEGER, -5]])
   end
 
   it 'tokenizes a symbol' do
-    result = scanner.tokenize(":PAGE")
-    expect(result[0]).to eq([:SYMBOL, ":PAGE"])
+    expect(scanner.tokenize(":PAGE")).to eq([[:SYMBOL, ":PAGE"]])
   end
 
   it 'tokenizes a string' do
-    result = scanner.tokenize("\"hello\"")
-    expect(result[0]).to eq([:STRING, "\"hello\""])
+    expect(scanner.tokenize("\"hello\"")).to eq([[:STRING, "\"hello\""]])
   end
 
   it 'tokenizes a number and a string' do
-    result = scanner.tokenize("\"hello\" 3000")
-    expect(result[0]).to eq([:STRING, "\"hello\""])
-    expect(result[1]).to eq([:INTEGER, 3000])
+    tokens = [[:STRING, "\"hello\""], [:INTEGER, 3000]]
+    expect(scanner.tokenize("\"hello\" 3000")).to eq(tokens)
   end
 
   it 'tokenizes a simple if/else block' do
@@ -80,28 +61,17 @@ if test == "test":
 else:
   print "false"
 CODE
-    result = scanner.tokenize(code)
-    expect(result[0]).to eq([:IF, "if"])
-    expect(result[1]).to eq([:IDENTIFIER, "test"])
-    expect(result[2]).to eq([:OPERATOR, "=="])
-    expect(result[3]).to eq([:STRING, "\"test\""])
-    expect(result[4]).to eq([:VALUE, ":"])
-    expect(result[5]).to eq([:INDENT, 2])
-    expect(result[6]).to eq([:IDENTIFIER, "print"])
-    expect(result[7]).to eq([:STRING, "\"true\""])
-    expect(result[8]).to eq([:OUTDENT, 0])
-    expect(result[9]).to eq([:ELSE, "else"])
-    expect(result[10]).to eq([:VALUE, ":"])
-    expect(result[11]).to eq([:INDENT, 2])
-    expect(result[12]).to eq([:IDENTIFIER, "print"])
-    expect(result[13]).to eq([:STRING, "\"false\""])
+    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], [:OPERATOR, "=="], [:STRING, "\"test\""], [:VALUE, ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "\"true\""],
+      [:OUTDENT, 0], [:ELSE, "else"], [:VALUE, ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "\"false\""]
+    ]
+    expect(scanner.tokenize(code)).to eq(tokens)
   end
 
   it 'tokenizes a calculation' do
-    result = scanner.tokenize("5 + 20")
-    expect(result[0]).to eq([:INTEGER, 5])
-    expect(result[1]).to eq([:OPERATOR, "+"])
-    expect(result[2]).to eq([:INTEGER, 20])
+    tokens = [[:INTEGER, 5], [:OPERATOR, "+"], [:INTEGER, 20]]
+    expect(scanner.tokenize("5 + 20")).to eq(tokens)
  end
 
   it 'tokenizes an identifier and ignores the newline' do
@@ -109,8 +79,7 @@ CODE
 print
 
 CODE
-    result = scanner.tokenize(code)
-    expect(result[0]).to eq([:IDENTIFIER, "print"])
+    expect(scanner.tokenize(code)).to eq([[:IDENTIFIER, "print"]])
   end
 
   it 'tokenizes a simple function block' do
@@ -119,15 +88,10 @@ function my_function:
   if true
     print "true"
 CODE
-    result = scanner.tokenize(code)
-    expect(result[0]).to eq([:FUNCTION, "function"])
-    expect(result[1]).to eq([:IDENTIFIER, "my_function"])
-    expect(result[2]).to eq([:VALUE, ":"])
-    expect(result[3]).to eq([:INDENT, 2])
-    expect(result[4]).to eq([:IF, "if"])
-    expect(result[5]).to eq([:TRUE, "true"])
-    expect(result[6]).to eq([:INDENT, 4])
-    expect(result[7]).to eq([:IDENTIFIER, "print"])
-    expect(result[8]).to eq([:STRING, "\"true\""])
+    tokens = [[:FUNCTION, "function"], [:IDENTIFIER, "my_function"], [:VALUE, ":"],
+      [:INDENT, 2], [:IF, "if"], [:TRUE, "true"],
+      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "\"true\""]
+    ]
+    expect(scanner.tokenize(code)).to eq(tokens)
   end
 end
