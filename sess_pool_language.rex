@@ -11,7 +11,7 @@ macro
   NEWLINE         \n
   NON_WHITESPACE  \S+
   OPERATOR        \|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\/
-  STRING          "\b[\\"]*.*?\b"
+  STRING          "[\\"]*.*?"
   SYMBOL          \:[A-Z_]+
   VALUE           .+
   WHITESPACE      \ +
@@ -31,13 +31,22 @@ rule
                                           @current_indent ||= 0
                                           indent_size = text.size - 1
                                           if indent_size > @current_indent
-                                            [:INDENT, indent_size]
-                                          else
-                                            [:OUTDENT, indent_size]
+                                            @current_indent = indent_size
+                                            [:INDENT, @current_indent]
+                                          elsif indent_size < @current_indent
+                                            @current_indent = indent_size
+                                            [:OUTDENT, @current_indent]
+                                          elsif indent_size == @current_indent
+                                            # NO ACTION
                                           end
                                         }
-         {NEWLINE}(?={NON_WHITESPACE})  { [:OUTDENT, 0] if @current_indent >= 0 }
-         {NEWLINE}{NEWLINE}             # NO ACTION
+         {NEWLINE}(?={NON_WHITESPACE})  {
+                                          if @current_indent >= 0
+                                            @current_indent = 0
+                                            [:OUTDENT, @current_indent]
+                                          end
+                                        }
+         {NEWLINE}                      # NO ACTION
          {BLANK}                        # NO ACTION
          {VALUE}                        { [:VALUE, text] }
 inner

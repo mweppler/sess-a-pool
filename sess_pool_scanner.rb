@@ -78,7 +78,7 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/[\+|-]?\d+/))
          action { [:INTEGER, text.to_i] }
 
-      when (text = @ss.scan(/"\b[\\"]*.*?\b"/))
+      when (text = @ss.scan(/"[\\"]*.*?"/))
          action { [:STRING, text] }
 
       when (text = @ss.scan(/\|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\//))
@@ -89,17 +89,26 @@ class SessPoolScanner < Racc::Parser
                                           @current_indent ||= 0
                                           indent_size = text.size - 1
                                           if indent_size > @current_indent
-                                            [:INDENT, indent_size]
-                                          else
-                                            [:OUTDENT, indent_size]
+                                            @current_indent = indent_size
+                                            [:INDENT, @current_indent]
+                                          elsif indent_size < @current_indent
+                                            @current_indent = indent_size
+                                            [:OUTDENT, @current_indent]
+                                          elsif indent_size == @current_indent
                                           end
                                         }
 
 
       when (text = @ss.scan(/\n(?=\S+)/))
-         action { [:OUTDENT, 0] if @current_indent >= 0 }
+         action {
+                                          if @current_indent >= 0
+                                            @current_indent = 0
+                                            [:OUTDENT, @current_indent]
+                                          end
+                                        }
 
-      when (text = @ss.scan(/\n\n/))
+
+      when (text = @ss.scan(/\n/))
         ;
 
       when (text = @ss.scan(/\s+/))

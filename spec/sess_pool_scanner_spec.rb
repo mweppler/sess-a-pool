@@ -94,4 +94,29 @@ CODE
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
   end
+
+  it 'tokenizes a slightly more difficult indentation case' do
+    code = <<-CODE
+if 1:
+  if 2:
+    print "..."
+    if false:
+      pass
+    print "done!"
+  2
+
+print "The End"
+CODE
+    tokens = [
+      [:IF, "if"], [:INTEGER, 1], [:VALUE, ":"],
+      [:INDENT, 2], [:IF, "if"], [:INTEGER, 2], [:VALUE, ":"],
+      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "\"...\""],
+      [:IF, "if"], [:FALSE, "false"], [:VALUE, ":"],
+      [:INDENT, 6], [:IDENTIFIER, "pass"],
+      [:OUTDENT, 4], [:IDENTIFIER, "print"], [:STRING, "\"done!\""],
+      [:OUTDENT, 2], [:INTEGER, 2],
+      [:OUTDENT, 0], [:IDENTIFIER, "print"], [:STRING, "\"The End\""]
+    ]
+    expect(scanner.tokenize(code)).to eq(tokens)
+  end
 end
