@@ -1,4 +1,4 @@
-require './sess_pool_scanner'
+require 'spec_helper'
 
 describe SessPoolScanner do
   let(:scanner) { SessPoolScanner.new }
@@ -46,12 +46,12 @@ describe SessPoolScanner do
   end
 
   it 'tokenizes a string' do
-    expect(scanner.tokenize("\"hello\"")).to eq([[:STRING, "\"hello\""]])
+    expect(scanner.tokenize(%{"hello"})).to eq([[:STRING, "hello"]])
   end
 
   it 'tokenizes a number and a string' do
-    tokens = [[:STRING, "\"hello\""], [:INTEGER, 3000]]
-    expect(scanner.tokenize("\"hello\" 3000")).to eq(tokens)
+    tokens = [[:STRING, "hello"], [:INTEGER, 3000]]
+    expect(scanner.tokenize(%{"hello" 3000})).to eq(tokens)
   end
 
   it 'tokenizes a simple if/else block' do
@@ -61,10 +61,10 @@ if test == "test":
 else:
   print "false"
 CODE
-    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], [:OPERATOR, "=="], [:STRING, "\"test\""], [:VALUE, ":"],
-      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "\"true\""],
-      [:OUTDENT, 0], [:ELSE, "else"], [:VALUE, ":"],
-      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "\"false\""]
+    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], [:OPERATOR, "=="], [:STRING, "test"], [:OPERATOR, ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "true"],
+      [:OUTDENT, 0], [:ELSE, "else"], [:OPERATOR, ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "false"]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
   end
@@ -88,9 +88,9 @@ function my_function:
   if true
     print "true"
 CODE
-    tokens = [[:FUNCTION, "function"], [:IDENTIFIER, "my_function"], [:VALUE, ":"],
+    tokens = [[:FUNCTION, "function"], [:IDENTIFIER, "my_function"], [:OPERATOR, ":"],
       [:INDENT, 2], [:IF, "if"], [:TRUE, "true"],
-      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "\"true\""]
+      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "true"]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
   end
@@ -108,14 +108,14 @@ if 1:
 print "The End"
 CODE
     tokens = [
-      [:IF, "if"], [:INTEGER, 1], [:VALUE, ":"],
-      [:INDENT, 2], [:IF, "if"], [:INTEGER, 2], [:VALUE, ":"],
-      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "\"...\""],
-      [:IF, "if"], [:FALSE, "false"], [:VALUE, ":"],
+      [:IF, "if"], [:INTEGER, 1], [:OPERATOR, ":"],
+      [:INDENT, 2], [:IF, "if"], [:INTEGER, 2], [:OPERATOR, ":"],
+      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "..."],
+      [:IF, "if"], [:FALSE, "false"], [:OPERATOR, ":"],
       [:INDENT, 6], [:IDENTIFIER, "pass"],
-      [:OUTDENT, 4], [:IDENTIFIER, "print"], [:STRING, "\"done!\""],
+      [:OUTDENT, 4], [:IDENTIFIER, "print"], [:STRING, "done!"],
       [:OUTDENT, 2], [:INTEGER, 2],
-      [:OUTDENT, 0], [:IDENTIFIER, "print"], [:STRING, "\"The End\""]
+      [:OUTDENT, 0], [:IDENTIFIER, "print"], [:STRING, "The End"]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
   end

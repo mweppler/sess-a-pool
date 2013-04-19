@@ -7,7 +7,13 @@ end
 
 task :default => :spec
 
-desc "Generate Lexer"
+desc "Generate the Lexer/Scanner"
 task :lexer do
   `rex sess_pool_language.rex -o sess_pool_scanner.rb`
 end
+
+desc "Generate the Parser"
+task :parser do
+  `racc -o sess_pool_parser.rb grammar.y`
+end
+

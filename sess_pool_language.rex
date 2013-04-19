@@ -1,20 +1,21 @@
 class SessPoolScanner
 macro
-  BLANK           \s+
-  COMMENT_BEGIN   \/\*
-  COMMENT_END     \*\/
-  CONSTANT        [A-Z_]+
-  FLOAT           [\+|-]?\d+\.\d*
-  KEYWORD         if|else|elsif|true|false|nil|def|end|function|while|return
-  IDENTIFIER      [a-z_][a-zA-Z_]+
-  INTEGER         [\+|-]?\d+
-  NEWLINE         \n
-  NON_WHITESPACE  \S+
-  OPERATOR        \|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\/
-  STRING          "[\\"]*.*?"
-  SYMBOL          \:[A-Z_]+
-  VALUE           .+
-  WHITESPACE      \ +
+  BLANK            \s+
+  COMMENT_BEGIN    \/\*
+  COMMENT_END      \*\/
+  CONSTANT         [A-Z_]+
+  FLOAT            [\+|-]?\d+\.\d*
+  KEYWORD          if|else|elsif|true|false|nil|def|end|function|while|return
+  IDENTIFIER       [a-z_][a-zA-Z_]+
+  INTEGER          [\+|-]?\d+
+  NEWLINE          \n
+  NON_WHITESPACE   \S+
+  DOUBLE_OPERATOR  \|\||&&|==|!=|<=|>=
+  SINGLE_OPERATOR  \(|\)|,|\.|!|<|>|\+|\-|\*|\/|;|\[|\]|\{|\}|:|\?|_|&|\^|%|\$|#|@|~|`
+  STRING           "[\\"]*.*?"
+  SYMBOL           \:[A-Z_]+
+  VALUE            .+
+  WHITESPACE       \ +
 rule
          {COMMENT_BEGIN}                { @state = :COMM ; [:COMMENT_BEGIN, text] }
   :COMM  {COMMENT_END}                  { @state = nil ; [:COMMENT_END, text] }
@@ -25,8 +26,7 @@ rule
          {SYMBOL}                       { [:SYMBOL, text] }
          {FLOAT}                        { [:FLOAT, text.to_f] }
          {INTEGER}                      { [:INTEGER, text.to_i] }
-         {STRING}                       { [:STRING, text] }
-         {OPERATOR}                     { [:OPERATOR, text] }
+         {STRING}                       { [:STRING, text[1...-1]] }
          {NEWLINE}{WHITESPACE}          {
                                           @current_indent ||= 0
                                           indent_size = text.size - 1
@@ -41,13 +41,17 @@ rule
                                           end
                                         }
          {NEWLINE}(?={NON_WHITESPACE})  {
-                                          if @current_indent >= 0
-                                            @current_indent = 0
-                                            [:OUTDENT, @current_indent]
+                                          unless @current_indent.nil?
+                                            if @current_indent >= 0
+                                              @current_indent = 0
+                                              [:OUTDENT, @current_indent]
+                                            end
                                           end
                                         }
          {NEWLINE}                      # NO ACTION
          {BLANK}                        # NO ACTION
+         {DOUBLE_OPERATOR}              { [:OPERATOR, text] }
+         {SINGLE_OPERATOR}              { [:OPERATOR, text] }
          {VALUE}                        { [:VALUE, text] }
 inner
   def tokenize(code)
