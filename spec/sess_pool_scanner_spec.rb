@@ -61,9 +61,9 @@ if test == "test":
 else:
   print "false"
 CODE
-    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], [:OPERATOR, "=="], [:STRING, "test"], [:OPERATOR, ":"],
-      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "true"],
-      [:OUTDENT, 0], [:ELSE, "else"], [:OPERATOR, ":"],
+    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], [:OPERATOR, "=="], [:STRING, "test"], [":", ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "true"], [:NEWLINE, "\n"],
+      [:OUTDENT, 0], [:ELSE, "else"], [":", ":"],
       [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "false"]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
@@ -88,7 +88,7 @@ function my_function:
   if true
     print "true"
 CODE
-    tokens = [[:FUNCTION, "function"], [:IDENTIFIER, "my_function"], [:OPERATOR, ":"],
+    tokens = [[:FUNCTION, "function"], [:IDENTIFIER, "my_function"], [":", ":"],
       [:INDENT, 2], [:IF, "if"], [:TRUE, "true"],
       [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "true"]
     ]
@@ -108,13 +108,13 @@ if 1:
 print "The End"
 CODE
     tokens = [
-      [:IF, "if"], [:INTEGER, 1], [:OPERATOR, ":"],
-      [:INDENT, 2], [:IF, "if"], [:INTEGER, 2], [:OPERATOR, ":"],
-      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "..."],
-      [:IF, "if"], [:FALSE, "false"], [:OPERATOR, ":"],
-      [:INDENT, 6], [:IDENTIFIER, "pass"],
-      [:OUTDENT, 4], [:IDENTIFIER, "print"], [:STRING, "done!"],
-      [:OUTDENT, 2], [:INTEGER, 2],
+      [:IF, "if"], [:INTEGER, 1], [":", ":"],
+      [:INDENT, 2], [:IF, "if"], [:INTEGER, 2], [":", ":"],
+      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "..."], [:NEWLINE, "\n"],
+      [:IF, "if"], [:FALSE, "false"], [":", ":"],
+      [:INDENT, 6], [:IDENTIFIER, "pass"], [:NEWLINE, "\n"],
+      [:OUTDENT, 4], [:IDENTIFIER, "print"], [:STRING, "done!"], [:NEWLINE, "\n"],
+      [:OUTDENT, 2], [:INTEGER, 2], [:NEWLINE, "\n"],
       [:OUTDENT, 0], [:IDENTIFIER, "print"], [:STRING, "The End"]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)

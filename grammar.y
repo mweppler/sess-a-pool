@@ -43,16 +43,13 @@ rule
   | Expressions                        { result = val[0] }
   ;
 
-  # Any list of expressions, class or method body, separated by line breaks.
   Expressions:
     Expression                         { result = Nodes.new(val) }
   | Expressions Terminator Expression  { result = val[0] << val[2] }
-    # To ignore trailing line breaks
   | Expressions Terminator             { result = val[0] }
   | Terminator                         { result = Nodes.new([]) }
   ;
 
-  # All types of expressions in our language
   Expression:
     Literal
   | Call
@@ -65,13 +62,11 @@ rule
   | '(' Expression ')'    { result = val[1] }
   ;
 
-  # All tokens that can terminate an expression
   Terminator:
     NEWLINE
   | ";"
   ;
 
-  # All hard-coded values
   Literal:
     FLOAT                         { result = NumberNode.new(val[0]) }
   | INTEGER                       { result = NumberNode.new(val[0]) }
@@ -81,15 +76,10 @@ rule
   | NIL                           { result = NilNode.new }
   ;
 
-  # A method call
   Call:
-    # method
     IDENTIFIER                    { result = CallNode.new(nil, val[0], []) }
-    # method(arguments)
   | IDENTIFIER "(" ArgList ")"    { result = CallNode.new(nil, val[0], val[2]) }
-    # receiver.method
   | Expression "." IDENTIFIER     { result = CallNode.new(val[0], val[2], []) }
-    # receiver.method(arguments)
   | Expression "."
       IDENTIFIER "(" ArgList ")"  { result = CallNode.new(val[0], val[2], val[4]) }
   ;
@@ -101,7 +91,6 @@ rule
   ;
 
   Operator:
-  # Binary operators
     Expression '||' Expression    { result = CallNode.new(val[0], val[1], [val[2]]) }
   | Expression '&&' Expression    { result = CallNode.new(val[0], val[1], [val[2]]) }
   | Expression '==' Expression    { result = CallNode.new(val[0], val[1], [val[2]]) }
@@ -120,13 +109,11 @@ rule
     CONSTANT                      { result = GetConstantNode.new(val[0]) }
   ;
 
-  # Assignment to a variable or constant
   Assign:
     IDENTIFIER "=" Expression     { result = SetLocalNode.new(val[0], val[2]) }
   | CONSTANT "=" Expression       { result = SetConstantNode.new(val[0], val[2]) }
   ;
 
-  # Method definition
   Def:
     DEF IDENTIFIER Block          { result = DefNode.new(val[1], [], val[2]) }
   | DEF IDENTIFIER
@@ -139,12 +126,10 @@ rule
   | ParamList "," IDENTIFIER      { result = val[0] << val[2] }
   ;
 
-  # Class definition
   Class:
     CLASS CONSTANT Block          { result = ClassNode.new(val[1], val[2]) }
   ;
 
-  # if block
   If:
     IF Expression Block           { result = IfNode.new(val[1], val[2]) }
   ;

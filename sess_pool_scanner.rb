@@ -72,13 +72,13 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/\:[A-Z_]+/))
          action { [:SYMBOL, text] }
 
-      when (text = @ss.scan(/[\+|-]?\d+\.\d*/))
+      when (text = @ss.scan(/[\+|-]?\d+\.\d+/))
          action { [:FLOAT, text.to_f] }
 
       when (text = @ss.scan(/[\+|-]?\d+/))
          action { [:INTEGER, text.to_i] }
 
-      when (text = @ss.scan(/"[\\"]*.*?"/))
+      when (text = @ss.scan(/"(.*?)"/))
          action { [:STRING, text[1...-1]] }
 
       when (text = @ss.scan(/\n +/))
@@ -90,18 +90,21 @@ class SessPoolScanner < Racc::Parser
                                             [:INDENT, @current_indent]
                                           elsif indent_size < @current_indent
                                             @current_indent = indent_size
-                                            [:OUTDENT, @current_indent]
+                                            [:NEWLINE, "\n", :OUTDENT, @current_indent]
                                           elsif indent_size == @current_indent
+                                            [:NEWLINE, "\n"]
                                           end
                                         }
 
 
       when (text = @ss.scan(/\n(?=\S+)/))
          action {
-                                          unless @current_indent.nil?
+                                          if @current_indent.nil?
+                                            [:NEWLINE, "\n"]
+                                          else
                                             if @current_indent >= 0
                                               @current_indent = 0
-                                              [:OUTDENT, @current_indent]
+                                              [:NEWLINE, "\n", :OUTDENT, @current_indent]
                                             end
                                           end
                                         }
@@ -113,11 +116,11 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/\s+/))
         ;
 
-      when (text = @ss.scan(/\|\||&&|==|!=|<=|>=/))
+      when (text = @ss.scan(/\|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\//))
          action { [:OPERATOR, text] }
 
-      when (text = @ss.scan(/\(|\)|,|\.|!|<|>|\+|\-|\*|\/|;|\[|\]|\{|\}|:|\?|_|&|\^|%|\$|/))
-         action { [:OPERATOR, text] }
+      when (text = @ss.scan(/\(|\)|,|\.|!|;|\[|\]|\{|\}|:|\?|_|&|\^|%|\$|/))
+         action { [text, text] }
 
       when (text = @ss.scan(/.+/))
          action { [:VALUE, text] }
@@ -146,12 +149,19 @@ class SessPoolScanner < Racc::Parser
     token
   end  # def _next_token
 
-  def tokenize(code)
+  def tokenize(code, show_tokens=false)
     scan_setup(code)
     tokens = []
     while token = next_token
-      tokens << token
+      if token.size > 2
+        while token.size > 0
+          tokens << [token.shift, token.shift]
+        end
+      else
+        tokens << token
+      end
     end
+    puts tokens if show_tokens
     tokens
   end
 end # class

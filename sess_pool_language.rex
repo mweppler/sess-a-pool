@@ -4,15 +4,16 @@ macro
   COMMENT_BEGIN    \/\*
   COMMENT_END      \*\/
   CONSTANT         [A-Z_]+
-  FLOAT            [\+|-]?\d+\.\d*
+  FLOAT            [\+|-]?\d+\.\d+
   KEYWORD          if|else|elsif|true|false|nil|def|end|function|while|return
   IDENTIFIER       [a-z_][a-zA-Z_]+
   INTEGER          [\+|-]?\d+
   NEWLINE          \n
   NON_WHITESPACE   \S+
-  DOUBLE_OPERATOR  \|\||&&|==|!=|<=|>=
-  SINGLE_OPERATOR  \(|\)|,|\.|!|<|>|\+|\-|\*|\/|;|\[|\]|\{|\}|:|\?|_|&|\^|%|\$|#|@|~|`
-  STRING           "[\\"]*.*?"
+  DOUBLE_OPERATOR  \|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\/
+  SINGLE_OPERATOR  \(|\)|,|\.|!|;|\[|\]|\{|\}|:|\?|_|&|\^|%|\$|#|@|~|`
+  #STRING           "[\\"]*.*?"
+  STRING           "(.*?)"
   SYMBOL           \:[A-Z_]+
   VALUE            .+
   WHITESPACE       \ +
@@ -35,31 +36,41 @@ rule
                                             [:INDENT, @current_indent]
                                           elsif indent_size < @current_indent
                                             @current_indent = indent_size
-                                            [:OUTDENT, @current_indent]
+                                            [:NEWLINE, "\n", :OUTDENT, @current_indent]
                                           elsif indent_size == @current_indent
                                             # NO ACTION
+                                            [:NEWLINE, "\n"]
                                           end
                                         }
          {NEWLINE}(?={NON_WHITESPACE})  {
-                                          unless @current_indent.nil?
+                                          if @current_indent.nil?
+                                            [:NEWLINE, "\n"]
+                                          else
                                             if @current_indent >= 0
                                               @current_indent = 0
-                                              [:OUTDENT, @current_indent]
+                                              [:NEWLINE, "\n", :OUTDENT, @current_indent]
                                             end
                                           end
                                         }
          {NEWLINE}                      # NO ACTION
          {BLANK}                        # NO ACTION
          {DOUBLE_OPERATOR}              { [:OPERATOR, text] }
-         {SINGLE_OPERATOR}              { [:OPERATOR, text] }
+         {SINGLE_OPERATOR}              { [text, text] }
          {VALUE}                        { [:VALUE, text] }
 inner
-  def tokenize(code)
+  def tokenize(code, show_tokens=false)
     scan_setup(code)
     tokens = []
     while token = next_token
-      tokens << token
+      if token.size > 2
+        while token.size > 0
+          tokens << [token.shift, token.shift]
+        end
+      else
+        tokens << token
+      end
     end
+    puts tokens if show_tokens
     tokens
   end
 end
