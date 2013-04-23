@@ -1,36 +1,33 @@
-class Nodes < Struct.new(:nodes)
+class CallNode        < Struct.new(:receiver, :method, :arguments); end
+class ClassNode       < Struct.new(:name, :body); end
+class DefNode         < Struct.new(:name, :params, :body); end
+class GetConstantNode < Struct.new(:name); end
+class IfNode          < Struct.new(:condition, :body); end
+class LiteralNode     < Struct.new(:value); end
+class Nodes           < Struct.new(:nodes)
   def <<(node)
     nodes << node
     self
   end
 end
+class SetConstantNode < Struct.new(:name, :value); end
+class SetLocalNode    < Struct.new(:name, :value); end
 
-class LiteralNode < Struct.new(:value); end
-class NumberNode < LiteralNode; end
-class StringNode < LiteralNode; end
-class TrueNode < LiteralNode
-  def initialize
-    super(true)
-  end
-end
-class FalseNode < LiteralNode
+# Subclasses of Literal Node
+class FalseNode       < LiteralNode
   def initialize
     super(false)
   end
 end
-class NilNode < LiteralNode
+class NilNode         < LiteralNode
   def initialize
     super(nil)
   end
 end
-
-class CallNode < Struct.new(:receiver, :method, :arguments); end
-
-class ClassNode < Struct.new(:name, :body); end
-class DefNode < Struct.new(:name, :params, :body); end
-class FunctionNode < Struct.new(:name, :params, :body); end
-class IfNode  < Struct.new(:condition, :body); end
-
-class GetConstantNode < Struct.new(:name); end
-class SetConstantNode < Struct.new(:name, :value); end
-class SetLocalNode < Struct.new(:name, :value); end
+class NumberNode      < LiteralNode; end
+class TrueNode        < LiteralNode
+  def initialize
+    super(true)
+  end
+end
+class StringNode      < LiteralNode; end

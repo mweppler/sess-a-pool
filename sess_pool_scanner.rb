@@ -60,13 +60,13 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/\/\*/))
          action { @state = :COMM ; [:COMMENT_BEGIN, text] }
 
-      when (text = @ss.scan(/if|else|elsif|true|false|nil|def|end|function|while|return/))
+      when (text = @ss.scan(/class|def|else|elsif|end|false|function|if|nil|return|true|while/))
          action { [text.upcase.to_sym, text] }
 
-      when (text = @ss.scan(/[a-z_][a-zA-Z_]+/))
+      when (text = @ss.scan(/[a-z_]{1}[a-zA-Z_]*/))
          action { [:IDENTIFIER, text] }
 
-      when (text = @ss.scan(/[A-Z_]+/))
+      when (text = @ss.scan(/[A-Z_]{1}[a-zA-Z0-9_]*/))
          action { [:CONSTANT, text] }
 
       when (text = @ss.scan(/\:[A-Z_]+/))
@@ -78,37 +78,50 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/[\+|-]?\d+/))
          action { [:INTEGER, text.to_i] }
 
-      when (text = @ss.scan(/"(.*?)"/))
+      when (text = @ss.scan(/"[\\"]*.*?"/))
          action { [:STRING, text[1...-1]] }
 
       when (text = @ss.scan(/\n +/))
          action {
-                                          @current_indent ||= 0
-                                          indent_size = text.size - 1
-                                          if indent_size > @current_indent
-                                            @current_indent = indent_size
-                                            [:INDENT, @current_indent]
-                                          elsif indent_size < @current_indent
-                                            @current_indent = indent_size
-                                            [:NEWLINE, "\n", :OUTDENT, @current_indent]
-                                          elsif indent_size == @current_indent
-                                            [:NEWLINE, "\n"]
-                                          end
-                                        }
+                                           @current_indent ||= 0
+                                           @stack          ||= []
+                                           indent_size       = text.size - 1 # the - 1 is for the new line
+                                           token           ||= []
+                                           if indent_size > @current_indent
+                                             @stack.push indent_size
+                                             @current_indent = @stack.last
+                                             tokens = [:INDENT, @current_indent]
+                                           elsif indent_size < @current_indent
+                                             @stack.pop
+                                             @current_indent = @stack.last || 0
+                                             tokens = [:OUTDENT, @current_indent, :NEWLINE, "\n"] # an outdent gets a new line to terminate the block
+                                           elsif indent_size == @current_indent
+                                             tokens = [:NEWLINE, "\n"]
+                                           end
+                                           tokens
+                                         }
 
 
       when (text = @ss.scan(/\n(?=\S+)/))
          action {
-                                          if @current_indent.nil?
-                                            [:NEWLINE, "\n"]
-                                          else
-                                            if @current_indent >= 0
-                                              @current_indent = 0
-                                              [:NEWLINE, "\n", :OUTDENT, @current_indent]
-                                            end
-                                          end
-                                        }
+                                           tokens ||= []
+                                           if @stack.nil?
+                                             tokens = [:NEWLINE, "\n"]
+                                           else
+                                             unless @stack.empty?
+                                               while !@stack.empty?
+                                                 @stack.pop # get rid of one
+                                                 @current_indent = @stack.last || 0
+                                                 tokens = tokens + [:OUTDENT, @current_indent, :NEWLINE, "\n"] # an outdent gets a new line to terminate the block
+                                               end
+                                             end
+                                           end
+                                           tokens
+                                         }
 
+
+      when (text = @ss.scan(/\|\||&&|==|!=|<=|>=|<|>|\*|\/|\+|\-/))
+         action { [text, text] }
 
       when (text = @ss.scan(/\n/))
         ;
@@ -116,14 +129,8 @@ class SessPoolScanner < Racc::Parser
       when (text = @ss.scan(/\s+/))
         ;
 
-      when (text = @ss.scan(/\|\||&&|==|!=|<=|>=|<|>|\+|\-|\*|\//))
-         action { [:OPERATOR, text] }
-
-      when (text = @ss.scan(/\(|\)|,|\.|!|;|\[|\]|\{|\}|:|\?|_|&|\^|%|\$|/))
+      when (text = @ss.scan(/=|,|!|;|:|_|&|@|%|~|`|\||\(|\)|\[|\]|\{|\}|\\|\^|\$|\?|\.|\#/))
          action { [text, text] }
-
-      when (text = @ss.scan(/.+/))
-         action { [:VALUE, text] }
 
       else
         text = @ss.string[@ss.pos .. -1]
@@ -154,14 +161,27 @@ class SessPoolScanner < Racc::Parser
     tokens = []
     while token = next_token
       if token.size > 2
-        while token.size > 0
-          tokens << [token.shift, token.shift]
-        end
+        tokens = tokens + split_tokens_greater_than_two(token)
       else
         tokens << token
       end
     end
+    tokens = tokens + empty_the_stack unless(@stack.nil?)
     puts tokens if show_tokens
+    tokens
+  end
+  private
+  def empty_the_stack
+    tokens = []
+    while !@stack.empty?
+      @stack.pop
+      tokens << [:OUTDENT, @stack.last || 0]
+    end
+    tokens
+  end
+  def split_tokens_greater_than_two(token)
+    tokens = []
+    tokens << [token.shift, token.shift]  while token.size > 0
     tokens
   end
 end # class

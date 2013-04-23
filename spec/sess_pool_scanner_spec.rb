@@ -49,7 +49,7 @@ describe SessPoolScanner do
     expect(scanner.tokenize(%{"hello"})).to eq([[:STRING, "hello"]])
   end
 
-  it 'tokenizes a number and a string' do
+  it 'tokenizes a string and a number' do
     tokens = [[:STRING, "hello"], [:INTEGER, 3000]]
     expect(scanner.tokenize(%{"hello" 3000})).to eq(tokens)
   end
@@ -61,16 +61,18 @@ if test == "test":
 else:
   print "false"
 CODE
-    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], [:OPERATOR, "=="], [:STRING, "test"], [":", ":"],
-      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "true"], [:NEWLINE, "\n"],
-      [:OUTDENT, 0], [:ELSE, "else"], [":", ":"],
-      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "false"]
+    tokens = [[:IF, "if"], [:IDENTIFIER, "test"], ["==", "=="], [:STRING, "test"], [":", ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "true"],
+      [:OUTDENT, 0], [:NEWLINE, "\n"],
+      [:ELSE, "else"], [":", ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "false"],
+      [:OUTDENT, 0]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
   end
 
   it 'tokenizes a calculation' do
-    tokens = [[:INTEGER, 5], [:OPERATOR, "+"], [:INTEGER, 20]]
+    tokens = [[:INTEGER, 5], ["+", "+"], [:INTEGER, 20]]
     expect(scanner.tokenize("5 + 20")).to eq(tokens)
  end
 
@@ -90,13 +92,14 @@ function my_function:
 CODE
     tokens = [[:FUNCTION, "function"], [:IDENTIFIER, "my_function"], [":", ":"],
       [:INDENT, 2], [:IF, "if"], [:TRUE, "true"],
-      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "true"]
+      [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "true"],
+      [:OUTDENT, 2], [:OUTDENT, 0]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
   end
 
   it 'tokenizes a slightly more difficult indentation case' do
-    code = <<-CODE
+    code = <<CODE
 if 1:
   if 2:
     print "..."
@@ -112,11 +115,15 @@ CODE
       [:INDENT, 2], [:IF, "if"], [:INTEGER, 2], [":", ":"],
       [:INDENT, 4], [:IDENTIFIER, "print"], [:STRING, "..."], [:NEWLINE, "\n"],
       [:IF, "if"], [:FALSE, "false"], [":", ":"],
-      [:INDENT, 6], [:IDENTIFIER, "pass"], [:NEWLINE, "\n"],
-      [:OUTDENT, 4], [:IDENTIFIER, "print"], [:STRING, "done!"], [:NEWLINE, "\n"],
-      [:OUTDENT, 2], [:INTEGER, 2], [:NEWLINE, "\n"],
-      [:OUTDENT, 0], [:IDENTIFIER, "print"], [:STRING, "The End"]
+      [:INDENT, 6], [:IDENTIFIER, "pass"],
+      [:OUTDENT, 4], [:NEWLINE, "\n"], [:IDENTIFIER, "print"], [:STRING, "done!"],
+      [:OUTDENT, 2], [:NEWLINE, "\n"], [:INTEGER, 2],
+      [:OUTDENT, 0], [:NEWLINE, "\n"], [:IDENTIFIER, "print"], [:STRING, "The End"]
     ]
     expect(scanner.tokenize(code)).to eq(tokens)
+  end
+
+  it 'tokenizes an assignment' do
+    expect(scanner.tokenize("a = 1")).to eq([[:IDENTIFIER, "a"], ["=", "="], [:INTEGER, 1]])
   end
 end

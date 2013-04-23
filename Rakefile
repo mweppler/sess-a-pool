@@ -14,6 +14,6 @@ end
 
 desc "Generate the Parser"
 task :parser do
-  `racc -o sess_pool_parser.rb grammar.y`
+  `racc sess_pool_grammar.y -o sess_pool_parser.rb`
 end
 
