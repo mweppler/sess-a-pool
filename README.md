@@ -22,7 +22,10 @@ bundle install
 # build the lexer
 rake lexer
 
-# run tests 
+# build the parser
+rake parser
+
+# run tests
 rake spec
 ```
 
@@ -30,7 +33,7 @@ rake spec
 
 ## REQUIREMENTS
 
-ruby 1.9.3
+ruby 1.9.2 or 1.9.3
 
 -
 
