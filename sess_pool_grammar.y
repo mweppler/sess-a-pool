@@ -59,6 +59,7 @@ rule
   | Def
   | Class
   | If
+  | While
   | '(' Expression ')'                 { result = val[1] }
   ;
 
@@ -79,6 +80,7 @@ rule
   Call:
     IDENTIFIER                         { result = CallNode.new(nil, val[0], []) }
   | IDENTIFIER "(" ArgList ")"         { result = CallNode.new(nil, val[0], val[2]) }
+  | IDENTIFIER ArgList                 { result = CallNode.new(nil, val[0], val[1]) }
   | Expression "." IDENTIFIER          { result = CallNode.new(val[0], val[2], []) }
   | Expression "."
       IDENTIFIER "(" ArgList ")"       { result = CallNode.new(val[0], val[2], val[4]) }
@@ -144,6 +146,11 @@ rule
   If:
     IF Expression Block                { result = IfNode.new(val[1], val[2]) }
   | IF Expression ":" Block            { result = IfNode.new(val[1], val[3]) }
+  ;
+
+  While:
+    WHILE Expression Block             { result = WhileNode.new(val[1], val[2]) }
+  | WHILE Expression ":" Block         { result = WhileNode.new(val[1], val[3]) }
   ;
 
   Block:

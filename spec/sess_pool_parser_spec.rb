@@ -113,6 +113,21 @@ CODE
     expect(parser.parse(code)).to eq nodes
   end
 
+  it 'parses a while statement' do
+    code = <<CODE
+while false:
+  print "true"
+CODE
+
+    nodes = Nodes.new([
+      WhileNode.new(FalseNode.new,
+        Nodes.new([CallNode.new(nil, "print", [StringNode.new("true")])])
+      )
+    ])
+
+    expect(parser.parse(code, true)).to eq nodes
+  end
+
   it 'parses a unary (!) operator' do
     nodes = Nodes.new([
       CallNode.new(NumberNode.new(2), "!", [])

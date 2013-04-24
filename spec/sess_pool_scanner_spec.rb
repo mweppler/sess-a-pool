@@ -84,6 +84,18 @@ CODE
     expect(scanner.tokenize(code)).to eq([[:IDENTIFIER, "print"]])
   end
 
+  it 'tokenizes a simple while block' do
+    code = <<CODE
+while true:
+  print "true"
+CODE
+    tokens = [[:WHILE, "while"], [:TRUE, "true"], [":", ":"],
+      [:INDENT, 2], [:IDENTIFIER, "print"], [:STRING, "true"],
+      [:OUTDENT, 0]
+    ]
+    expect(scanner.tokenize(code)).to eq(tokens)
+  end
+
   it 'tokenizes a simple function block' do
     code = <<CODE
 function my_function:

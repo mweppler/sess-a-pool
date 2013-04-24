@@ -12,6 +12,7 @@ class Nodes           < Struct.new(:nodes)
 end
 class SetConstantNode < Struct.new(:name, :value); end
 class SetLocalNode    < Struct.new(:name, :value); end
+class WhileNode       < Struct.new(:condition, :body); end
 
 # Subclasses of Literal Node
 class FalseNode       < LiteralNode
