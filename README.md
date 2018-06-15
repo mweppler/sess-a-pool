@@ -8,9 +8,9 @@
 
 ## DESCRIPTION
 
-wikipedia: "A cesspit, or cesspool, is a pit, conservancy tank or covered cistern which can be used to dispose of urine and feces…"  
+wikipedia: "A cesspit, or cesspool, is a pit, conservancy tank or covered cistern which can be used to dispose of urine and feces..."
 
-That pretty much sums things up…  
+That pretty much sums things up...
 
 -
 

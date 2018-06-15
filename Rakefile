@@ -5,15 +5,17 @@ RSpec::Core::RakeTask.new(:spec) do |task|
   task.rspec_opts << '--format documentation '
 end
 
-task :default => :spec
+task default: :spec
 
-desc "Generate the Lexer/Scanner"
+desc 'Generate the Lexer/Scanner'
 task :lexer do
   `rex sess_pool_language.rex -o sess_pool_scanner.rb`
 end
+# $ bundle exec rake spec SPEC=spec/sess_pool_scanner_spec.rb
 
-desc "Generate the Parser"
+desc 'Generate the Parser'
 task :parser do
   `racc sess_pool_grammar.y -o sess_pool_parser.rb`
 end
+# $ bundle exec rake spec SPEC=spec/sess_pool_parser_spec.rb
 
